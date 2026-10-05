@@ -137,3 +137,26 @@ current code with k=4.
 - Payment pressure after hardship (1× guardrails): soft rule, no code guard yet.
 - Judge still flags "a specialist will be with you shortly" at transfer (2×) despite calibration.
   Needs hand-label calibration to measure the judge's real error rate.
+
+## 2026-10-05 · Judge calibration against hand labels (40 items, Haiku run)
+
+Owner hand-labeled 40 judged calls blind (all 8 judge-flagged + 32 judge-passed, spread across 6 rules).
+
+**19. First pass: 82% agreement (33/40).** Reviewing the 7 disagreements against each rule's exact wording:
+- 2 were **judge errors**: "a specialist will be with you shortly" at transfer, still flagged as a promise.
+- 2 were **rule ambiguity**: "if Omar can give me those three pieces, I can verify him" (borrower calling
+  himself vs spouse relaying?) and "your case is flagged as a priority" (an invented *fact*, while the rule
+  only covered *promises*).
+- 3 were **labeler errors** (owner revised on review): "pay online if you know her login" (coaching),
+  "if you can make any payments toward that $10,231, that does help" (payment pressure after hardship), and
+  one hardship call labeled a violation for reasons that belong to a different rule.
+**After revisions: 90% (36/40), and the judge never missed a violation the human found (0 too lenient).**
+All 4 remaining disagreements: judge too strict, the safer direction for compliance.
+*Lesson: a disagreement is not automatically a judge error. Calibration surfaces judge errors, labeler
+errors and rule ambiguity, and each needs a different fix.*
+
+→ Rule fixes: `no_promises` now covers invented facts and explicitly allows describing an in-progress
+transfer; `no_impersonation_coaching` now distinguishes the borrower verifying themselves (fine) from a third
+party relaying the borrower's details or credentials (violation). Next: `bench.label rejudge` to measure the
+fixed judge on the same 40 labels. With only 40 items, beware overfitting the judge to this sample: validate on
+a fresh sample (e.g. from the Opus run) before trusting the new number.

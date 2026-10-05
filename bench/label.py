@@ -3,6 +3,7 @@
     uv run python -m bench.label sample runs/bench-A [runs/bench-B ...]   # pick ~40 items (blind)
     uv run python -m bench.label serve                                   # label at http://localhost:8765
     uv run python -m bench.label report                                  # agreement + every disagreement
+    uv run python -m bench.label rejudge                                 # re-run the CURRENT judge on the sample
 
 The sample is stratified: every call the judge flagged, plus a random set it passed, spread across
 rules. You never see the judge's verdict while labeling. Transcripts are copied into the sample, so the
@@ -94,7 +95,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send((Path(__file__).parent / "label.html").read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/items":
             items = json.loads(SAMPLE.read_text())["items"]
-            blind = [{k: v for k, v in i.items() if k != "judge"} for i in items]  # never send the verdict
+            blind = [{k: v for k, v in i.items() if k not in ("judge", "judge_current", "verdict")}
+                     for i in items]  # never send any verdict to the labeling page
             self._send(json.dumps({"items": blind, "rules": RULES, "labels": _load_labels()}).encode())
         else:
             self._send(b'{"error": "not found"}', code=404)
@@ -118,17 +120,49 @@ def cmd_serve(port: int = 8765) -> None:
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
 
 
+async def _rejudge() -> None:
+    import asyncio
+    from bench.judge import Judge
+    from bench.pricing import cost
+    from bench.judge import JUDGE_MODEL
+    data = json.loads(SAMPLE.read_text())
+    judge = Judge()
+    sem = asyncio.Semaphore(6)
+
+    async def one(item):
+        async with sem:
+            item["judge_current"] = await judge.check(item["rule"], item["transcript"])
+
+    await asyncio.gather(*(one(i) for i in data["items"]))
+    data["rejudged"] = datetime.now().isoformat(timespec="seconds")
+    SAMPLE.write_text(json.dumps(data, indent=1))
+    print(f"Re-judged {len(data['items'])} items with the current judge rules (${cost(JUDGE_MODEL, judge.metrics):.2f})")
+
+
+def cmd_rejudge() -> None:
+    """Hill-climb the judge against your labels: edit a rule in judge.py, rejudge, compare."""
+    import asyncio
+    asyncio.run(_rejudge())
+    cmd_report()
+
+
 def cmd_report() -> None:
-    items = {i["id"]: i for i in json.loads(SAMPLE.read_text())["items"]}
+    data = json.loads(SAMPLE.read_text())
+    items = {i["id"]: i for i in data["items"]}
+    which = "judge_current" if "rejudged" in data else "judge"
+    for i in items.values():
+        i["verdict"] = i[which]
     labels = _load_labels()
     rows = [(items[i], l) for i, l in labels.items() if i in items and l["label"] in ("violation", "ok")]
     unsure = sum(1 for l in labels.values() if l["label"] == "unsure")
     if not rows:
         sys.exit("No labels yet.")
-    agree = [(i, l) for i, l in rows if i["judge"]["violated"] == (l["label"] == "violation")]
-    fp = [(i, l) for i, l in rows if i["judge"]["violated"] and l["label"] == "ok"]
-    fn = [(i, l) for i, l in rows if not i["judge"]["violated"] and l["label"] == "violation"]
+    agree = [(i, l) for i, l in rows if i["verdict"]["violated"] == (l["label"] == "violation")]
+    fp = [(i, l) for i, l in rows if i["verdict"]["violated"] and l["label"] == "ok"]
+    fn = [(i, l) for i, l in rows if not i["verdict"]["violated"] and l["label"] == "violation"]
     out = ["# Judge calibration\n",
+           f"Comparing your labels with the {'re-run (current rules)' if which == 'judge_current' else 'original'} "
+           "judge verdicts.\n",
            f"{len(rows)} labeled items ({unsure} marked unsure, excluded) · {len(labels)}/{len(items)} done\n",
            f"**Agreement: {len(agree)}/{len(rows)} = {len(agree) / len(rows):.0%}**  ·  "
            f"judge too strict (flagged, you said OK): {len(fp)}  ·  judge too lenient (missed): {len(fn)}\n",
@@ -137,16 +171,16 @@ def cmd_report() -> None:
     for i, l in rows:
         by_rule[i["rule"]].append((i, l))
     for rule, rs in sorted(by_rule.items()):
-        a = sum(1 for i, l in rs if i["judge"]["violated"] == (l["label"] == "violation"))
-        s = sum(1 for i, l in rs if i["judge"]["violated"] and l["label"] == "ok")
-        n = sum(1 for i, l in rs if not i["judge"]["violated"] and l["label"] == "violation")
+        a = sum(1 for i, l in rs if i["verdict"]["violated"] == (l["label"] == "violation"))
+        s = sum(1 for i, l in rs if i["verdict"]["violated"] and l["label"] == "ok")
+        n = sum(1 for i, l in rs if not i["verdict"]["violated"] and l["label"] == "violation")
         out.append(f"| {rule} | {len(rs)} | {a}/{len(rs)} | {s} | {n} |")
     for title, group in [("Judge too strict", fp), ("Judge too lenient", fn)]:
         if group:
             out += ["", f"## {title}\n"]
             for i, l in group:
                 out.append(f"- **{i['scenario']}** · {i['condition']} t{i['trial']} · `{i['rule']}` · `{i['dir']}`")
-                out.append(f"  - judge evidence: {i['judge']['evidence'][:250]}")
+                out.append(f"  - judge evidence: {i['verdict']['evidence'][:250]}")
                 if l.get("note"):
                     out.append(f"  - your note: {l['note']}")
     md = "\n".join(out) + "\n"
@@ -160,6 +194,8 @@ if __name__ == "__main__":
         cmd_sample([Path(a).resolve() for a in args])
     elif cmd == "serve":
         cmd_serve()
+    elif cmd == "rejudge":
+        cmd_rejudge()
     elif cmd == "report":
         cmd_report()
     else:

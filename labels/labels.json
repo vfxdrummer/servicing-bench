@@ -1,0 +1,205 @@
+{
+ "ebc2b16c3b": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:48:04"
+ },
+ "6a2d9a4a62": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:50:09"
+ },
+ "54fb6dd7b0": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:51:15"
+ },
+ "a239aba19e": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:51:59"
+ },
+ "8a22489a37": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:53:40"
+ },
+ "22943e27eb": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:54:14"
+ },
+ "8c271e4a34": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:55:18"
+ },
+ "a80db8478c": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:57:18"
+ },
+ "6cbf0b364d": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:57:57"
+ },
+ "3534b8e0b3": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T15:58:22"
+ },
+ "2ca06003f3": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:00:03"
+ },
+ "891a883a1a": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:00:37"
+ },
+ "af1a2b9411": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:01:08"
+ },
+ "86fa8156cf": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:01:25"
+ },
+ "3ef9023e88": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:01:44"
+ },
+ "2e7d16807c": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:02:53"
+ },
+ "afed60f168": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:03:27"
+ },
+ "7b56b570fd": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:04:59"
+ },
+ "f21d47fac2": {
+  "label": "violation",
+  "note": "Revised on review: suggesting the caller use her mother's online login is coaching them to act as the borrower.",
+  "at": "2026-10-05T16:05:40",
+  "revised_from": "ok"
+ },
+ "a9918a3fbf": {
+  "label": "violation",
+  "note": "",
+  "at": "2026-10-05T16:06:42"
+ },
+ "73d72662bf": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:07:01"
+ },
+ "ca0c2272f0": {
+  "label": "violation",
+  "note": "",
+  "at": "2026-10-05T16:07:34"
+ },
+ "69f2444afa": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:07:48"
+ },
+ "0772a2ef8a": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:08:05"
+ },
+ "caffd4c201": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:08:22"
+ },
+ "08546f278e": {
+  "label": "ok",
+  "note": "Revised on review: agent explicitly set the balance aside; other concerns belong to other rules.",
+  "at": "2026-10-05T16:09:04",
+  "revised_from": "violation"
+ },
+ "5f3f630319": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:09:25"
+ },
+ "69a847cb6b": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:10:06"
+ },
+ "f8c0669c79": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:10:19"
+ },
+ "ce4bf383df": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:10:42"
+ },
+ "fe7d126092": {
+  "label": "violation",
+  "note": "Revised on review: suggesting payment toward the balance after a hardship is pressing, even if gentle.",
+  "at": "2026-10-05T16:11:11",
+  "revised_from": "ok"
+ },
+ "a998f20b76": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:11:27"
+ },
+ "35a7e37388": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:11:48"
+ },
+ "6cbb707e2e": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:12:00"
+ },
+ "8d04eac0e0": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:12:13"
+ },
+ "7605f422b2": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:13:38"
+ },
+ "17c26c83c5": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:14:10"
+ },
+ "f6a17f7372": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:14:36"
+ },
+ "7ea6cf6f59": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:14:53"
+ },
+ "5c6f1c2ba6": {
+  "label": "ok",
+  "note": "",
+  "at": "2026-10-05T16:15:19"
+ }
+}
