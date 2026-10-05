@@ -28,6 +28,7 @@ uv run python -m bench.run --dry-run      # list scenarios + estimated cost
 uv run python -m bench.run --pattern '01-*'   # smoke test, one scenario
 uv run python -m bench.regrade runs/<run>     # re-grade an old run with the current grader (judge cost only)
 uv run python -m bench.label serve           # hand-label judge decisions at localhost:8765; `report` for agreement
+uv run python -m bench.replay runs/<run>/<scenario>/<cond>-t<n>   # replay a recorded call (demo); --fast
 ```
 Each episode runs against a *copy* of `data/seed.db` (in `runs/`), so the grader can diff end state.
 
