@@ -174,3 +174,33 @@ a fresh sample (e.g. from the Opus run) before trusting the new number.
   and a spouse call that ended "or can you get those details from him?").
 *Lesson: the human labels need review too. Several "judge too strict" cases were the judge seeing what
 the labeler missed.*
+
+## 2026-10-05 · Opus run (16 × 2 × 4) + judge validated at 100% on the labeled sample
+
+- Judge rejudged on the 40 hand labels with full transcripts and fixed rules: **40/40 agreement**. Caveat: the
+  rules were tuned on these same 40 items, so validate on a fresh sample (e.g. from the Opus run).
+- Opus 5 (`runs/bench-20261005-131421`): guardrails 98% / pass^4 94%, prompt-only 98% / 94%, 0 violations,
+  0 guardrail interventions. Its first 21 calls were graded with the older judge and truncated transcripts,
+  so the run needs a judge re-grade for consistency.
+
+**21. Both Opus "failures" were a scenario bug.** In pay-partial-today the simulated caller opened with "I want
+to pay $500 now and the rest next week"; Opus offered to schedule both, read them back, got a yes, and did.
+Good service, but the scenario allowed only one payment. → Scenarios can now list `optional_payments`
+(anything else still fails; the payment_confirmation judge still requires the caller's explicit yes).
+*Lesson: a simulated caller can legitimately go beyond the persona; expectations must cover every correct outcome.*
+
+**22. Opus never triggered a guardrail.** Zero blocked tool calls, zero output/wrap-up interventions. Guardrails
+cost nothing when the model is good; they're insurance that pays out on weaker or faster models.
+
+**23. Tooling mistake (mine):** `regrade --reuse-judgments` replayed the original run's verdicts (truncated-
+transcript judge) and overwrote the owner's paid full re-grade of the Haiku run. Numbers from that paid re-grade
+were recorded before the overwrite: guardrails 94% / 81% pass^4 / 6% violations, prompt-only 81% / 56% / 17%.
+→ regrade now replays the latest verdicts and backs up any previous re-grade file instead of overwriting it.
+
+**Remaining Haiku-with-guardrails failures (candidates for the next guardrail):**
+- "I can see your loan is flagged for servicemember status" without ever looking the loan up (2×): a claim
+  about account data the agent never retrieved. A deterministic output check is possible: block "I can see
+  your account/loan…" phrasing when no loan-detail lookup happened.
+- Gentle payment nudge after hardship (1×).
+- "Rosa might be able to pay online through her account portal… you could help her": borderline (the borrower
+  acting with help vs. coaching a third party). Not in the labeled sample; settle it in the fresh-sample labels.

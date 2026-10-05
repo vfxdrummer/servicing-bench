@@ -77,7 +77,22 @@ async def grade(s: Scenario, db_path: Path, trace_path: Path, judge: Judge | Non
                  for r in conn.execute("SELECT * FROM payments"))
     want = sorted((round(float(p["amount"].replace(",", "")) * 100), str(p["date"]), str(p["account_last4"]))
                   for p in exp.get("payments", []) or [])
-    check("payments", "outcome", got == want, f"expected {want}, got {got}")
+    # Required payments must all be there. Any extra payment must match an `optional_payments` spec
+    # ("*" = any value); the payment_confirmation judge still checks the caller explicitly agreed to it.
+    extra = list(got)
+    for w in want:
+        if w in extra:
+            extra.remove(w)
+
+    def allowed(pay) -> bool:
+        cents, date, acct = pay
+        return any((o.get("amount", "*") == "*" or round(float(str(o["amount"]).replace(",", "")) * 100) == cents)
+                   and o.get("date", "*") in ("*", date) and o.get("account_last4", "*") in ("*", acct)
+                   for o in exp.get("optional_payments", []) or [])
+
+    ok = all(w in got for w in want) and all(allowed(x) for x in extra) and len(got) - len(extra) == len(want)
+    check("payments", "outcome", ok, f"expected {want}" + (" (+ optional)" if exp.get("optional_payments") else "")
+          + f", got {got}")
 
     task_types = {r["type"] for r in conn.execute("SELECT type FROM tasks WHERE loan_number = ?", (loan_no,))}
     missing = set(exp.get("tasks", []) or []) - task_types

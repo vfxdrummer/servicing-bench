@@ -254,3 +254,17 @@ def test_call_note_required_once_caller_gives_loan_number(seed_db, tmp_path, sce
     with trace.open("a") as f:
         f.write(json.dumps({"event": "caller", "text": f"The loan is {s.loan['loan_number']}."}) + "\n")
     assert [c["check"] for c in grade(s, db, trace)["failed_checks"]] == ["call_note"]
+
+
+def test_optional_payment_allowed_but_unexpected_payment_still_fails(seed_db, tmp_path, scenarios):
+    s = scenarios["pay-partial-today"]
+    l = s.loan
+    pay = lambda amt, date, acct: ("take_payment", {"loan_number": l["loan_number"], "amount": amt,
+                                                     "payment_date": date, "account_last4": acct})
+    db, trace = episode(seed_db, tmp_path, s, [verify(s), pay("500.00", "2026-10-15", "8812"),
+                                               pay("100.00", "2026-10-22", "8812"), comment(s)])
+    assert grade(s, db, trace)["passed"]
+    (tmp_path / "x").mkdir()
+    db2, trace2 = episode(seed_db, tmp_path / "x", s, [verify(s), pay("500.00", "2026-10-15", "8812"),
+                                                      pay("100.00", "2026-10-22", "9999"), comment(s)])
+    assert "payments" in [c["check"] for c in grade(s, db2, trace2)["failed_checks"]]

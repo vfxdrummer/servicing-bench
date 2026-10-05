@@ -7,6 +7,8 @@ persona: |
   You plan to pay the rest next week. You're not in any hardship, just timing; don't describe it as hardship.
 expect:
   payments: [{amount: "500.00", date: "2026-10-15", account_last4: "8812"}]
+  # The caller mentions paying the rest next week; scheduling it now (if the caller agrees) is also correct.
+  optional_payments: [{amount: "*", date: "*", account_last4: "8812"}]
   tasks: []
   transfer: none
   comment: true

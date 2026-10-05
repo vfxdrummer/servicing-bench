@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from bench import report
@@ -39,7 +40,12 @@ class StoredJudge:
 
 
 async def main(run_dir: Path, reuse: bool = False, concurrency: int = 6) -> None:
-    rows = [json.loads(l) for l in (run_dir / "results.jsonl").read_text().splitlines() if l.strip()]
+    # Replay the LATEST verdicts: a previous re-grade's file holds newer judgments than the original run.
+    source = run_dir / "results.regraded.jsonl"
+    if not (reuse and source.exists()):
+        source = run_dir / "results.jsonl"
+    rows = [json.loads(l) for l in source.read_text().splitlines() if l.strip()]
+    print(f"Source: {source.name}")
     scenarios = {s.id: s for s in load_all(SEED_DB)}
     sem = asyncio.Semaphore(concurrency)
     judge_cost = 0.0
@@ -64,6 +70,10 @@ async def main(run_dir: Path, reuse: bool = False, concurrency: int = 6) -> None
     print(f"Re-grading {len(rows)} calls in {run_dir} (changes listed below)")
     regraded = await asyncio.gather(*(one(r) for r in rows))
     out = run_dir / "results.regraded.jsonl"
+    if out.exists():  # never silently destroy a previous (possibly paid-for) re-grade
+        backup = run_dir / f"results.regraded.{datetime.now():%H%M%S}.bak.jsonl"
+        out.rename(backup)
+        print(f"Previous re-grade kept as {backup.name}")
     out.write_text("\n".join(json.dumps(r, default=str) for r in regraded) + "\n")
     md = report.build(out)
     (run_dir / "report.regraded.md").write_text(md)
