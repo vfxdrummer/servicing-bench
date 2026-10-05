@@ -54,6 +54,7 @@ class ServicingSystem:
         self.today = date.fromisoformat(today)
         self.verified_loan: str | None = None
         self.failed_attempts: dict[str, int] = {}
+        self.identified_loans: set[str] = set()  # loans that came up on this call
         self.transferred = False
 
     # ── plumbing ────────────────────────────────────────────────────────────
@@ -99,6 +100,9 @@ class ServicingSystem:
             self._log(tool, args, "error", str(e))
             raise ToolError(f"Bad arguments for {tool}: {e}")
         self._log(tool, args, "ok")
+        loan = args.get("loan_number")
+        if loan and (tool != "lookup_loan" or result.get("exists")):
+            self.identified_loans.add(loan.strip())
         return result
 
     # ── tools ───────────────────────────────────────────────────────────────
@@ -216,6 +220,13 @@ class ServicingSystem:
             raise ToolError(f"reason must be one of: {', '.join(TRANSFER_REASONS)}.")
         if loan_number:
             self._loan(loan_number)
+        # Policy rule 9: the call ends on transfer, so the call note must already exist.
+        noted = {r[0] for r in self.conn.execute("SELECT loan_number FROM comments WHERE author = 'agent'")}
+        missing = sorted((self.identified_loans | ({loan_number.strip()} if loan_number else set())) - noted)
+        self._guard(not missing,
+                    f"Add a call note with add_loan_comment for loan(s) {', '.join(missing)} before "
+                    "transferring; the call ends on transfer.",
+                    "transfer_to_human", {"reason": reason, "note": note, "loan_number": loan_number})
         self.conn.execute(
             "INSERT INTO transfers (loan_number, reason, note) VALUES (?,?,?)", (loan_number, reason, note)
         )

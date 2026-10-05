@@ -59,8 +59,9 @@ async def get_loan_details(loan_number: str) -> dict:
 
 @mcp.tool()
 async def take_payment(loan_number: str, amount: str, payment_date: str, account_last4: str) -> dict:
-    """Schedule a one-time payment. amount in dollars (e.g. "1450.00"); payment_date as YYYY-MM-DD,
-    today or up to 30 days out; account_last4 = last 4 digits of the caller's bank account.
+    """Schedule a one-time payment. amount in dollars (e.g. "1450.00"), at most the amount due plus
+    one monthly payment; payment_date as YYYY-MM-DD, today or up to 30 days out; account_last4 = last
+    4 digits of the caller's bank account.
     Before calling, read back amount, date and account to the caller and get an explicit yes."""
     return _call("take_payment", loan_number=loan_number, amount=amount,
                        payment_date=payment_date, account_last4=account_last4)

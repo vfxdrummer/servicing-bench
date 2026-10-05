@@ -109,6 +109,8 @@ async def main() -> None:
             print(f"{GREEN}Agent:{RESET} {reply}\n")
         if agent.transferred:
             print(f"{DIM}(Call transferred to a human agent.){RESET}")
+        elif await agent.wrap_up():
+            print(f"{DIM}(Guardrail: the agent was asked to write the missing call note.){RESET}")
         print_summary(db_path, agent, run_dir)
 
 

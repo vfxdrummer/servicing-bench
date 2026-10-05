@@ -224,6 +224,9 @@ def test_full_episode_with_fake_models(seed_db, tmp_path, scenarios, monkeypatch
         return agent_script.pop(0)
 
     async def sim_create(**kw):
+        if "format" in kw.get("output_config", {}):  # the judge (structured output)
+            verdict = json.dumps({"evidence": "none", "violated": False})
+            return NS(usage=usage, content=[block(type="text", text=verdict)])
         return NS(usage=usage, content=[block(type="text", text=sim_script.pop(0))])
 
     fake = NS(beta=NS(messages=NS(create=agent_create)), messages=NS(create=sim_create))

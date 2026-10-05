@@ -120,12 +120,13 @@ Validate the grader: hand-label ~40 transcripts and report judge agreement. That
 - [x] User simulator; runner with JSONL traces; concurrency; cost estimate + confirmation
 - [x] Grader: end-state diff + rule checks + LLM judge for soft rules (pulled forward from Week 3; calibration still Week 3)
 - [x] Report: pass@1, pass^k, violations, blocked attempts, cost (39 tests, no API)
-- [ ] First real run (owner, needs API key): smoke test, then 16 × 2 conditions
+- [x] First real runs: Opus 16×2×1 (97%), Haiku 16×2×2 (84%, guardrails made no difference)
 - ✅ *Showable:* the first results table
 
 **Week 3: Reliability + guardrails**
 - [ ] All 30 scenarios; k = 4 runs; pass^k
-- [ ] Guardrail layer; run E1 (prompt vs. code); E2 models
+- [x] Guardrail layer v2: transfer gate, output guardrail (debt disclosure), post-call wrap-up hook
+- [ ] Run E1 (prompt vs. code) on Haiku with k=4; E2 models
 - [ ] LLM judge for soft rules; hand-label 40 transcripts, measure agreement
 - [ ] Fix top failure modes, re-run; keep a held-out set to avoid overfitting
 - ✅ *Showable:* the headline E1 result

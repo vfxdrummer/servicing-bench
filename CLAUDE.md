@@ -26,6 +26,7 @@ uv run pytest -q                          # all tests (no API calls)
 uv run python chat.py                     # talk to the agent
 uv run python -m bench.run --dry-run      # list scenarios + estimated cost
 uv run python -m bench.run --pattern '01-*'   # smoke test, one scenario
+uv run python -m bench.regrade runs/<run>     # re-grade an old run with the current grader (judge cost only)
 ```
 Each episode runs against a *copy* of `data/seed.db` (in `runs/`), so the grader can diff end state.
 
@@ -35,7 +36,9 @@ Each episode runs against a *copy* of `data/seed.db` (in `runs/`), so the grader
 - `chat.py`: terminal chat; you play the borrower.
 - `bench/`: the benchmark. `scenarios/*.yaml` (format in `scenarios/README.md`), `simulator.py` (LLM borrower),
   `grader.py` (end state + violations), `judge.py` (LLM judge for soft rules), `run.py` (runner), `report.py`.
+- `servicing/money.py`: how amounts appear in speech (shared by the output guardrail and the grader).
 - `tests/`: guardrails, MCP boundary, agent loop, and benchmark harness. All use fake models; no API calls.
+- `FINDINGS.md`: running log of results and lessons. Add an entry after every benchmark run.
 
 ## Gotchas
 - **MCP Python SDK is 2.x**: `from mcp.server.mcpserver import MCPServer` (FastMCP is gone); client results use `is_error`/`input_schema`. Only `mcp.server.mcpserver.exceptions.ToolError` passes its message to the model. Any other exception reaches the model as a bare "Error executing tool X". `mcp_server._call` translates errors; keep it that way.

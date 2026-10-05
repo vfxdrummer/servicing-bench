@@ -38,10 +38,10 @@ SEED_DB = ROOT / "data" / "seed.db"
 MAX_CALLER_TURNS = 14
 CONDITIONS = {"guardrails": True, "prompt_only": False}
 
-# Rough per-call estimate before any measurements exist (agent ~8 model calls with caching,
+# Rough per-call estimate (agent ~8 model calls with caching,
 # simulator ~7 short calls, ~1.5 judge calls). The report shows the real, measured cost.
-EST_AGENT_PER_CALL_AT_OPUS = 0.20
-EST_SIM_AND_JUDGE_PER_CALL = 0.05
+EST_AGENT_PER_CALL_AT_OPUS = 0.07  # measured: $0.064 on a 5-turn payment call (2026-10-05)
+EST_SIM_AND_JUDGE_PER_CALL = 0.02  # measured: ~$0.012
 
 
 async def run_episode(s: Scenario, condition: str, trial: int, run_dir: Path, agent_model: str) -> dict:
@@ -70,9 +70,12 @@ async def run_episode(s: Scenario, condition: str, trial: int, run_dir: Path, ag
                 if sim.ended:
                     end_reason = "caller_ended"
                     break
+            # Post-call hook: only acts with guardrails on and only if a call note is missing.
+            wrapped_up = await agent.wrap_up()
         graded = await grade(s, db_path, trace_path, judge)
         result.update(graded)
-        result.update(end_reason=end_reason, caller_turns=agent.metrics["turns"],
+        result.update(end_reason=end_reason, caller_turns=agent.metrics["turns"], wrapped_up=wrapped_up,
+                      guardrail_interventions=agent.metrics["guardrail_interventions"],
                       agent_metrics=agent.metrics)
     except Exception as e:  # an API or harness failure is not an agent failure; record and move on
         result.update(error=f"{type(e).__name__}: {e}", traceback=traceback.format_exc()[-2000:])

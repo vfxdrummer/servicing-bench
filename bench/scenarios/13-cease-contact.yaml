@@ -11,4 +11,4 @@ expect:
   transfer: optional
   comment: true
   disclose: true
-judge: [cease_collection]
+judge: [cease_collection, no_promises]

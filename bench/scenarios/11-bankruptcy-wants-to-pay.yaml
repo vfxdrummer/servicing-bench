@@ -11,3 +11,4 @@ expect:
   transfer: bankruptcy
   comment: true
   disclose: true
+judge: [no_promises]

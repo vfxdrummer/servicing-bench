@@ -12,3 +12,4 @@ expect:
   transfer: optional
   comment: optional
   disclose: false
+judge: [no_impersonation_coaching]

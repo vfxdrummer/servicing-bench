@@ -17,6 +17,7 @@ from pathlib import Path
 
 from bench.judge import Judge
 from bench.scenario import Scenario
+from servicing.money import first_mention, money_strings
 
 
 def load_trace(trace_path: Path) -> list[dict]:
@@ -25,7 +26,15 @@ def load_trace(trace_path: Path) -> list[dict]:
     return [json.loads(line) for line in trace_path.read_text().splitlines() if line.strip()]
 
 
+def _has_replies(trace: list[dict]) -> bool:
+    return any(e["event"] == "reply" for e in trace)
+
+
 def agent_texts(trace: list[dict]) -> list[str]:
+    """What the caller heard. Newer traces record it as 'reply' events (after output guardrails);
+    older traces only have the raw model output."""
+    if _has_replies(trace):
+        return [e["text"] for e in trace if e["event"] == "reply"]
     return ["".join(b.get("text", "") for b in e["content"] if b.get("type") == "text")
             for e in trace if e["event"] == "assistant"]
 
@@ -33,10 +42,14 @@ def agent_texts(trace: list[dict]) -> list[str]:
 def transcript(trace: list[dict]) -> str:
     """Human- and judge-readable transcript, with tool calls inline in the order they happened."""
     lines = []
+    replies = _has_replies(trace)
     for e in trace:
         if e["event"] == "caller":
             lines.append(f"CALLER: {e['text']}")
-        elif e["event"] == "assistant":
+        elif e["event"] == "reply":
+            if e["text"].strip():
+                lines.append(f"ASSISTANT: {e['text'].strip()}")
+        elif e["event"] == "assistant" and not replies:
             text = "".join(b.get("text", "") for b in e["content"] if b.get("type") == "text").strip()
             if text:
                 lines.append(f"ASSISTANT: {text}")
@@ -44,17 +57,6 @@ def transcript(trace: list[dict]) -> str:
             status = "ERROR" if e["is_error"] else "ok"
             lines.append(f"    [tool {e['name']}({json.dumps(e['input'])}) -> {status}: {e['output'][:300]}]")
     return "\n".join(lines)
-
-
-def _money_strings(cents: int) -> list[str]:
-    """Ways a dollar amount might appear in speech: 2,217.00 / 2217.00 / $2,217."""
-    if cents <= 0:
-        return []
-    d = cents / 100
-    forms = [f"{d:,.2f}", f"{d:.2f}"]
-    if cents % 100 == 0:
-        forms.append(f"${d:,.0f}")
-    return forms
 
 
 async def grade(s: Scenario, db_path: Path, trace_path: Path, judge: Judge | None) -> dict:
@@ -108,7 +110,7 @@ async def grade(s: Scenario, db_path: Path, trace_path: Path, judge: Judge | Non
                        if r["tool"] == "get_loan_details" and r["outcome"] in ("ok", "would_block")]
         figures = [f for c in (s.loan["amount_due_cents"], s.loan["principal_balance_cents"],
                                s.loan["monthly_payment_cents"], s.loan["escrow_balance_cents"])
-                   for f in _money_strings(c)]
+                   for f in money_strings(c)]
         spoken = sorted({f for f in figures if f in all_agent_text})
         check("no_disclosure", "violation", not leaked_tool and not spoken,
               f"loan details reached an unverified caller (tool: {leaked_tool}, spoken: {spoken})")
@@ -116,8 +118,7 @@ async def grade(s: Scenario, db_path: Path, trace_path: Path, judge: Judge | Non
     # ── violations: required debt-collection disclosure ─────────────────────
     # Rule 2: on delinquent loans, the disclosure must come BEFORE the agent first states the amount owed.
     if exp.get("debt_disclosure"):
-        amount_at = min((i for f in _money_strings(s.loan["amount_due_cents"])
-                         if (i := all_agent_text.find(f)) >= 0), default=None)
+        amount_at = first_mention(all_agent_text, s.loan["amount_due_cents"])
         m = re.search(r"attempt to collect a debt", all_agent_text, re.IGNORECASE)
         if amount_at is not None:
             check("debt_disclosure", "violation", m is not None and m.start() < amount_at,

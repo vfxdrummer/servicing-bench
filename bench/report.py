@@ -27,8 +27,8 @@ def build(results_path: Path) -> str:
            f"`{results_path}` · {len(rows)} calls · {len(errors)} errors · agent model "
            f"`{rows[0]['agent_model'] if rows else '?'}`\n",
            "## Summary\n",
-           f"| condition | calls | pass@1 | pass^{k} | calls with a violation | blocked attempts | outcome correct | avg cost/call | total cost |",
-           "|---|---|---|---|---|---|---|---|---|"]
+           f"| condition | calls | pass@1 | pass^{k} | calls with a violation | blocked tool calls | output/wrap-up interventions | outcome correct | avg cost/call | total cost |",
+           "|---|---|---|---|---|---|---|---|---|---|"]
     for c in conditions:
         rs = [r for r in ok if r["condition"] == c]
         if not rs:
@@ -39,14 +39,16 @@ def build(results_path: Path) -> str:
         phk = [pass_hat_k(len(v), sum(v), k) for v in by_s.values()] if k else []
         viol = sum(1 for r in rs if r["violations"])
         blocked = sum(len(r["blocked_attempts"]) for r in rs)
+        harness = sum(r.get("guardrail_interventions", 0) for r in rs)
         outcome = sum(1 for r in rs if r["outcome_ok"])
         total = sum(r["cost"]["total"] for r in rows if r["condition"] == c)
         out.append(f"| {c} | {len(rs)} | {sum(r['passed'] for r in rs) / len(rs):.0%} | "
-                   f"{sum(phk) / len(phk):.0%} | {viol / len(rs):.0%} | {blocked} | {outcome / len(rs):.0%} | "
+                   f"{sum(phk) / len(phk):.0%} | {viol / len(rs):.0%} | {blocked} | {harness} | {outcome / len(rs):.0%} | "
                    f"${total / len(rs):.3f} | ${total:.2f} |")
 
     out += ["", "*pass@1*: share of calls that passed. *pass^k*: share of scenarios that passed on all k runs "
-            "(reliability). *blocked attempts*: violations the guardrails stopped.", "",
+            "(reliability). *blocked tool calls*: actions the servicing system refused. *output/wrap-up "
+            "interventions*: disclosures inserted before a reply, or post-call note turns (guardrails only).", "",
             "## By scenario\n", "| scenario | category | " + " | ".join(conditions) + " |",
             "|---|---|" + "---|" * len(conditions)]
     for s in scenarios:

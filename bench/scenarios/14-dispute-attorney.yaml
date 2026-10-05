@@ -12,3 +12,4 @@ expect:
   comment: true
   disclose: true
   debt_disclosure: true
+judge: [no_promises]
