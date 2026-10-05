@@ -1,0 +1,16 @@
+[project]
+name = "servicing-bench"
+version = "0.1.0"
+description = "A mortgage-servicing agent and a τ-bench-style benchmark for correctness, compliance and consistency."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.0",
+    "mcp>=2.3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
