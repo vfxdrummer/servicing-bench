@@ -187,3 +187,22 @@ def test_money_mentions():
     assert first_mention("about $7,454 total", 745400) == 6
     assert first_mention("nothing here", 745400) is None
     assert money_strings(0) == []
+
+
+def test_wrap_up_covers_loan_the_caller_named_but_agent_never_looked_up(db):
+    l = loan(db, "current")
+    script = [reply("end_turn", text("Sorry, I can only discuss a loan with the borrower.")),
+              # wrap-up turn:
+              reply("tool_use", tool("c", "add_loan_comment", {"loan_number": l["loan_number"],
+                                                               "text": "Third party asked for info; declined."})),
+              reply("end_turn")]
+    agent, _, wrapped, fake = drive(db, script, [f"I'm his wife. What's owed on {l['loan_number']}?"], wrap_up=True)
+    assert wrapped is True
+    assert l["loan_number"] in fake.requests[1][-1]["content"]
+    assert sqlite3.connect(db).execute("SELECT COUNT(*) FROM comments WHERE author='agent'").fetchone()[0] == 1
+
+
+def test_wrap_up_ignores_ten_digit_numbers_that_are_not_loans(db):
+    script = [reply("end_turn", text("How can I help?"))]
+    _, _, wrapped, fake = drive(db, script, ["Call me back at 5551234567."], wrap_up=True)
+    assert wrapped is False and len(fake.requests) == 1

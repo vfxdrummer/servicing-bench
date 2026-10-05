@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 
@@ -51,6 +52,7 @@ class ServicingAgent:
         self.transferred = False
         # What the agent has learned during the call, used by the guardrails.
         self.identified_loans: set[str] = set()
+        self.mentioned_numbers: set[str] = set()  # 10-digit numbers the caller said (maybe loan numbers)
         self.noted_loans: set[str] = set()
         self.loan_status: dict[str, dict] = {}   # loan_number → {"status", "amount_due_cents"}
         self.disclosure_given = False
@@ -179,6 +181,7 @@ class ServicingAgent:
         self.metrics["turns"] += 1
         self._add_user_text(caller_text)
         self._trace("caller", text=caller_text)
+        self.mentioned_numbers |= set(re.findall(r"\b\d{10}\b", caller_text))
         reply = "\n\n".join(await self._run())
         if self.guardrails:
             reply = self._output_guardrail(reply)
@@ -190,8 +193,16 @@ class ServicingAgent:
     async def wrap_up(self) -> bool:
         """Post-call hook (guardrails only): make sure every identified loan has a call note.
         Returns True if a wrap-up turn was needed."""
+        if not self.guardrails or self.transferred:
+            return False
+        # Loans the caller named but the agent never looked up still need a note (policy rule 9).
+        # Confirm each is a real loan first, so a 10-digit phone number doesn't trigger a note.
+        for number in sorted(self.mentioned_numbers - self.identified_loans - self.noted_loans):
+            output, is_error = await self.tools.call("lookup_loan", {"loan_number": number})
+            if not is_error and json.loads(output).get("exists"):
+                self.identified_loans.add(number)
         missing = sorted(self.identified_loans - self.noted_loans)
-        if not self.guardrails or self.transferred or not missing:
+        if not missing:
             return False
         self.metrics["guardrail_interventions"] += 1
         self._trace("guardrail", rule="call_note", action=f"wrap-up turn for {missing}")

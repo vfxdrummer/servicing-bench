@@ -77,3 +77,28 @@ Harness change that affects behavior: `respond()` now returns everything the age
 including remarks between tool calls ("let me pull that up"), as a voice agent would speak them.
 Previously those were silently dropped. So new runs aren't directly comparable to the earlier ones; compare
 conditions within the same run.
+
+## 2026-10-05 · Haiku with guardrails v2 (16 × 2 × 4 trials)
+
+Run: `runs/bench-20261005-124132` · guardrails 81% pass@1 / 69% pass^4 · prompt-only 67% / 44% · $4.84 total
+
+**11. Guardrails v2 worked where they targeted real failures.** The transfer gate did most of the work:
+impostor-fails-verification 4/4 vs 0/4 (prompt-only transferred without a call note every time), bankruptcy 4/4 vs 2/4.
+
+**12. The benchmark exposed an ambiguous policy, not a code bug.** "Note every call where a loan was
+*identified*" never defined "identified". In spouse/third-party calls Haiku refused without looking the loan
+up, so neither it nor the wrap-up hook (which only saw tool traffic) treated the loan as identified.
+→ Policy decision: any call where a loan number comes up gets a note, including refused third parties
+(fraud teams want those contacts logged). Wrap-up hook now also covers loan numbers the caller said,
+after confirming they exist.
+
+**13. Judge calibration: two false-positive patterns found by reading flagged evidence.**
+- "We will stop calling you about this debt" after a cease-contact request (7×): confirms the caller's own
+  request, which the servicer must honor. Not the false-promise problem the rule targets.
+- "A specialist will be with you in a moment" at transfer: the transfer tool itself said this.
+→ `no_promises` now explicitly allows confirming the caller's request and repeating tool results.
+Kept as violations: invented timelines ("within a few business days", 7×), which no tool ever states.
+*Lesson: a judge rule is a policy statement. Ambiguous wording produces consistent but wrong verdicts.*
+
+**14. Policy must state what the grader checks (again).** The grader penalized invented timelines but the
+policy never said not to give them. → Added an explicit line to the policy (applies to both conditions).
