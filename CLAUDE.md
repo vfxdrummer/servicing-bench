@@ -27,6 +27,7 @@ uv run python chat.py                     # talk to the agent
 uv run python -m bench.run --dry-run      # list scenarios + estimated cost
 uv run python -m bench.run --pattern '01-*'   # smoke test, one scenario
 uv run python -m bench.regrade runs/<run>     # re-grade an old run with the current grader (judge cost only)
+uv run python -m bench.label serve           # hand-label judge decisions at localhost:8765; `report` for agreement
 ```
 Each episode runs against a *copy* of `data/seed.db` (in `runs/`), so the grader can diff end state.
 
@@ -38,6 +39,7 @@ Each episode runs against a *copy* of `data/seed.db` (in `runs/`), so the grader
   `grader.py` (end state + violations), `judge.py` (LLM judge for soft rules), `run.py` (runner), `report.py`.
 - `servicing/money.py`: how amounts appear in speech (shared by the output guardrail and the grader).
 - `tests/`: guardrails, MCP boundary, agent loop, and benchmark harness. All use fake models; no API calls.
+- `labels/`: hand labels for judge calibration (`sample.json`, `labels.json`, `report.md`). Committed: re-check any judge change against them.
 - `FINDINGS.md`: running log of results and lessons. Add an entry after every benchmark run.
 
 ## Gotchas
