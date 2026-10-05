@@ -7,7 +7,7 @@
 **The resume line we're building toward:**
 > Built an open-source mortgage-servicing agent and a 30-scenario benchmark with simulated borrowers. Moving compliance rules from the prompt into code-enforced guardrails cut policy violations from X% to 0% across N conversations and raised pass^4 from Y% to Z%.
 
-**Audience:** the AI Engineer role at an AI-agents-for-mortgage-servicing company. The project should show tool-using agents, compliance guardrails, evals, reliability and human handoff.
+**Audience:** teams deploying AI agents in regulated customer-service workflows. The project should show tool-using agents, compliance guardrails, evals, reliability and human handoff.
 
 ---
 
