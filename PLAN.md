@@ -126,14 +126,14 @@ Validate the grader: hand-label ~40 transcripts and report judge agreement. That
 **Week 3: Reliability + guardrails**
 - [ ] All 30 scenarios; k = 4 runs; pass^k
 - [x] Guardrail layer v2: transfer gate, output guardrail (debt disclosure), post-call wrap-up hook
-- [ ] Run E1 (prompt vs. code) on Haiku with k=4; E2 models
+- [x] E1 (prompt vs. code) on Haiku k=4; E2 Haiku vs Opus k=4; judge calibrated on 40 hand labels
 - [ ] LLM judge for soft rules; hand-label 40 transcripts, measure agreement
 - [ ] Fix top failure modes, re-run; keep a held-out set to avoid overfitting
 - ✅ *Showable:* the headline E1 result
 
 **Week 4: Ship**
 - [ ] Web demo (chat as borrower, live tool-call view) + results dashboard; deploy
-- [ ] README: pitch, results, architecture, how to run, limitations, "not legal advice"
+- [x] README: pitch, results, architecture, how to run, limitations, "not legal advice"
 - [ ] 60-second demo video
 - [ ] Write-up: "What broke when I put an AI agent on a mortgage servicing line"
 - [ ] Get 10 people to try it and collect transcripts and feedback

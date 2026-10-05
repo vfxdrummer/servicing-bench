@@ -204,3 +204,15 @@ were recorded before the overwrite: guardrails 94% / 81% pass^4 / 6% violations,
 - Gentle payment nudge after hardship (1×).
 - "Rosa might be able to pay online through her account portal… you could help her": borderline (the borrower
   acting with help vs. coaching a third party). Not in the labeled sample; settle it in the fresh-sample labels.
+
+## 2026-10-05 · Final consistent numbers (both runs re-graded with the calibrated judge)
+
+| | pass@1 | pass^4 | violations | agent $/call | median latency |
+|---|---|---|---|---|---|
+| Haiku 4.5, prompt only | 83% | 56% | 16% | $0.025 | 1.3 s |
+| Haiku 4.5 + guardrails | 92% | 81% | 8% | $0.026 | 1.3 s |
+| Opus 5 (both conditions) | 100% | 100% | 0% | $0.065 | 2.6 s |
+
+**24. Guardrails close about half the gap to Opus** (pass@1 +9 of 17 points, pass^4 +25 of 44), at ~40% of the
+agent cost and half the latency. Earlier "three-quarters" estimate was wrong: fixing the scenario bug moved Opus to 100%.
+**25. Judge variance:** re-grading identical Haiku calls moved guardrails pass@1 94% → 92%. Treat ±2 points as noise.
