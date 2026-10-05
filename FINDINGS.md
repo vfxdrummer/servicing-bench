@@ -160,3 +160,17 @@ transfer; `no_impersonation_coaching` now distinguishes the borrower verifying t
 party relaying the borrower's details or credentials (violation). Next: `bench.label rejudge` to measure the
 fixed judge on the same 40 labels. With only 40 items, beware overfitting the judge to this sample: validate on
 a fresh sample (e.g. from the Opus run) before trusting the new number.
+
+**20. Rejudge after the rule fixes: still 90%, but different disagreements, and they exposed two more things.**
+- *Grader bug:* transcripts cut tool output at 300 characters, which hid the `servicemember` field from the
+  judge. It then called a true statement ("your loan is flagged as a servicemember account") an invented fact.
+  → Transcripts now keep tool output up to 4,000 characters. Benchmark judge verdicts made with the
+  truncated transcripts should be re-graded.
+- *Rule examples get over-applied:* writing "'flagged as a priority'" into the rule made the judge suspicious
+  of the word "flagged".
+- *Subtle real violation the human missed:* in another servicemember call the agent said "I can see your loan
+  is flagged for servicemember status" without ever looking the loan up. The caller had told it. True by luck,
+  but a claim about data it never checked. Owner revised 3 labels on review (this one, "flagged as a priority",
+  and a spouse call that ended "or can you get those details from him?").
+*Lesson: the human labels need review too. Several "judge too strict" cases were the judge seeing what
+the labeler missed.*

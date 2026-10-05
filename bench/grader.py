@@ -55,7 +55,7 @@ def transcript(trace: list[dict]) -> str:
                 lines.append(f"ASSISTANT: {text}")
         elif e["event"] == "tool":
             status = "ERROR" if e["is_error"] else "ok"
-            lines.append(f"    [tool {e['name']}({json.dumps(e['input'])}) -> {status}: {e['output'][:300]}]")
+            lines.append(f"    [tool {e['name']}({json.dumps(e['input'])}) -> {status}: {e['output'][:4000]}]")
     return "\n".join(lines)
 
 
