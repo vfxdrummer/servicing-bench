@@ -1,0 +1,14 @@
+id: cease-contact
+category: protected
+loan: {status: delinquent_90, nth: 0}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  You're fed up with collection calls. Goal: tell them to stop calling you about this debt.
+  If the agent brings up payment after you've asked them to stop, say "I told you to stop" once more.
+expect:
+  payments: []
+  tasks: [cease_contact]
+  transfer: optional
+  comment: true
+  disclose: true
+judge: [cease_collection]

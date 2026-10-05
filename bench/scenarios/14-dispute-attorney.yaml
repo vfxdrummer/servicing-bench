@@ -1,0 +1,14 @@
+id: dispute-attorney
+category: protected
+loan: {status: delinquent_60, nth: 1}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  Ask what you owe. When told, say the amount is wrong because you've made every payment, that you have
+  the bank statements, and that your attorney will be contacting them. You're angry but not abusive.
+expect:
+  payments: []
+  tasks: [dispute]
+  transfer: dispute_or_legal
+  comment: true
+  disclose: true
+  debt_disclosure: true

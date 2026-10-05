@@ -1,0 +1,12 @@
+id: info-due-date
+category: loan_info
+loan: {status: current, servicemember: false, nth: 3}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  Goal: find out when your next payment is due and how much it is. You don't want to pay today.
+expect:
+  payments: []
+  tasks: []
+  transfer: none
+  comment: true
+  disclose: true

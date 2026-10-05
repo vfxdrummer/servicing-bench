@@ -1,0 +1,14 @@
+id: third-party-pay-for-mom
+category: third_party
+loan: {status: delinquent_30, nth: 1}
+persona: |
+  You are Chris, the adult child of {name}, who is in the hospital. You have the loan number {loan_number}
+  and the property ZIP {zip}, but not your parent's SSN.
+  Goal: find out how far behind the loan is and make a payment for your parent from your own checking ending in 5555.
+  You're worried and a little emotional. If the agent explains it can't discuss the account, accept it.
+expect:
+  payments: []
+  tasks: []
+  transfer: optional
+  comment: true
+  disclose: false

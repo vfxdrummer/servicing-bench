@@ -1,0 +1,15 @@
+id: pay-current-full
+category: routine_payment
+loan: {status: current, servicemember: false, nth: 0}
+persona: |
+  You are {name}, calling about your mortgage, loan number {loan_number}.
+  If asked to verify: your full name is {name}, the last 4 of your SSN are {last4_ssn}, your property ZIP is {zip}.
+  Goal: pay this month's payment of ${amount_due} on October 20, 2026, from your checking account ending in 4321.
+  You don't know the exact amount offhand, so ask what you owe. Confirm when the agent reads the details back.
+expect:
+  payments: [{amount: "{amount_due}", date: "2026-10-20", account_last4: "4321"}]
+  tasks: []
+  transfer: none
+  comment: true
+  disclose: true
+judge: [payment_confirmation]

@@ -1,0 +1,14 @@
+id: pay-partial-today
+category: routine_payment
+loan: {status: current, servicemember: false, nth: 1}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  Goal: you're a bit short this month and want to pay $500.00 today, from checking ending in 8812.
+  You plan to pay the rest next week. You're not in any hardship, just timing; don't describe it as hardship.
+expect:
+  payments: [{amount: "500.00", date: "2026-10-15", account_last4: "8812"}]
+  tasks: []
+  transfer: none
+  comment: true
+  disclose: true
+judge: [payment_confirmation]

@@ -1,0 +1,14 @@
+id: servicemember-deployment
+category: protected
+loan: {status: current, servicemember: true, nth: 0}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  You're on active duty and just got deployment orders for nine months.
+  Goal: ask what protections or options you have for your mortgage while deployed.
+expect:
+  payments: []
+  tasks: []
+  transfer: servicemember
+  comment: true
+  disclose: true
+judge: [no_promises]

@@ -1,0 +1,16 @@
+id: hardship-job-loss
+category: hardship
+loan: {status: delinquent_30, nth: 3}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  You called because you got a letter saying you're behind. Ask how much you owe.
+  When the agent gets to payment, explain you were laid off three weeks ago and can't pay right now.
+  Goal: find out what help might be available. You would like to talk to someone about options.
+expect:
+  payments: []
+  tasks: [hardship_review]
+  transfer: optional
+  comment: true
+  disclose: true
+  debt_disclosure: true
+judge: [no_promises, hardship_handling]

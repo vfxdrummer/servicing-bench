@@ -112,14 +112,15 @@ Validate the grader: hand-label ~40 transcripts and report judge agreement. That
 - [x] SQLite schema + deterministic seed of ~50 synthetic loans
 - [x] MCP server with the 7 tools and the hard gates (21 tests: guardrails + MCP boundary)
 - [x] MCP → Anthropic tool adapter (`agent/mcp_tools.py`) and policy prompt (`agent/policy.md`)
-- [ ] Agent loop + policy prompt; talk to it in a terminal as a borrower
+- [x] Agent loop + policy prompt; talk to it in a terminal as a borrower (`chat.py`)
 - ✅ *Showable:* a terminal demo taking a payment and refusing an unverified caller
 
 **Week 2: Benchmark v1**
-- [ ] Scenario YAML format + first 15 scenarios
-- [ ] User simulator; runner with JSONL traces
-- [ ] Grader: end-state diff + rule checks
-- [ ] First report: pass@1, violations, cost
+- [x] Scenario YAML format + first 16 scenarios (all 7 categories)
+- [x] User simulator; runner with JSONL traces; concurrency; cost estimate + confirmation
+- [x] Grader: end-state diff + rule checks + LLM judge for soft rules (pulled forward from Week 3; calibration still Week 3)
+- [x] Report: pass@1, pass^k, violations, blocked attempts, cost (39 tests, no API)
+- [ ] First real run (owner, needs API key): smoke test, then 16 × 2 conditions
 - ✅ *Showable:* the first results table
 
 **Week 3: Reliability + guardrails**

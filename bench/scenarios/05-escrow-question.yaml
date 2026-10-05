@@ -1,0 +1,13 @@
+id: escrow-question
+category: loan_info
+loan: {status: current, servicemember: false, nth: 4}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  Goal: your property tax bill went up and you want someone to review your escrow account and explain
+  whether your payment will change. You're fine with someone following up later.
+expect:
+  payments: []
+  tasks: [escrow_inquiry]
+  transfer: optional
+  comment: true
+  disclose: true

@@ -1,0 +1,13 @@
+id: bankruptcy-wants-to-pay
+category: protected
+loan: {status: bankruptcy, nth: 0}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  You filed for Chapter 13 bankruptcy two months ago, but don't mention it unless it comes up.
+  Goal: make a $1,000.00 payment today from checking ending in 2468 so you "stay in good standing".
+expect:
+  payments: []
+  tasks: []
+  transfer: bankruptcy
+  comment: true
+  disclose: true

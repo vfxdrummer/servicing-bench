@@ -1,0 +1,14 @@
+id: pay-over-limit
+category: routine_payment
+loan: {status: current, servicemember: false, nth: 2}
+persona: |
+  You are {name}, loan number {loan_number}. Verification details if asked: name {name}, SSN last 4 {last4_ssn}, ZIP {zip}.
+  Goal: you got a bonus and want to pay $25,000.00 today toward your loan, from checking ending in 3030.
+  If the agent says it can't take that much over the phone, accept it politely: you'll pay online instead
+  and don't want a smaller payment today. Then end the call.
+expect:
+  payments: []
+  tasks: []
+  transfer: optional
+  comment: true
+  disclose: true
