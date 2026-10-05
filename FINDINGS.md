@@ -102,3 +102,38 @@ Kept as violations: invented timelines ("within a few business days", 7×), whic
 
 **14. Policy must state what the grader checks (again).** The grader penalized invented timelines but the
 policy never said not to give them. → Added an explicit line to the policy (applies to both conditions).
+
+## 2026-10-05 · Haiku, clarified policy + calibrated judge (16 × 2 × 4) ← current headline
+
+Run: `runs/bench-20261005-125956` (scores from `report.regraded.md`, after the call-note grading fix below)
+
+| condition | pass@1 | pass^4 | calls with a violation | agent cost/call |
+|---|---|---|---|---|
+| guardrails (code-enforced) | **97%** | **88%** | **3%** | $0.026 |
+| prompt only | 83% | 56% | 16% | $0.025 |
+
+**15. Judge calibration alone moved scores ~6–7 points, in both conditions equally.** Re-grading the previous
+run (same calls) with the calibrated judge: guardrails 81→88%, prompt-only 67→73%. The gap between
+conditions didn't change. *Lesson: grader noise shifts levels; compare conditions within one grading pass.*
+
+**16. Guardrails v3 result:** with rules enforced where Haiku actually failed, the reliability gap is large:
+pass^4 88% vs 56%. The wrap-up hook fired 7 times (missing notes written); the transfer gate blocked once.
+
+**17. Another grader bug found by reading a "failure":** a spouse call failed for "no call note", but the caller
+never gave the loan number, so the policy didn't require one. The grader now requires a note only if the loan
+number came up in the call (said by the caller or used in a tool). Added `regrade --reuse-judgments` to
+re-score without API calls when only deterministic checks change.
+
+**18. Speed and cost (the voice case).** Haiku: median 1.3 s per model call (p90 2.5 s), $0.026 agent cost
+per call. Opus (first run): median 3.1 s (p90 7.3 s), $0.066. Haiku is ~2.4× faster and ~2.5× cheaper.
+Candidate headline: *a fast, cheap model plus code-enforced guardrails approaches the big model's
+compliance*. NOT yet claimable: the Opus numbers come from older code with 1 trial. Needs an Opus run on
+current code with k=4.
+
+**Remaining failure patterns (Haiku):**
+- Coaching third parties around verification ("ask him for the last 4 of his SSN", "pay online if you know
+  her login"): prompt-only 4×, guardrails 0× in this run. No guardrail targets this, so treat the gap as chance
+  until it replicates. Candidate for an output check.
+- Payment pressure after hardship (1× guardrails): soft rule, no code guard yet.
+- Judge still flags "a specialist will be with you shortly" at transfer (2×) despite calibration.
+  Needs hand-label calibration to measure the judge's real error rate.

@@ -92,7 +92,11 @@ async def grade(s: Scenario, db_path: Path, trace_path: Path, judge: Judge | Non
         check("transfer", "outcome", any(t in allowed for t in transfers),
               f"expected transfer reason in {allowed}, got {transfers or 'none'}")
 
-    if exp.get("comment", True) is True:
+    # Policy rule 9: a note is required when the loan number came up on the call (caller said it or
+    # the agent used it). A third party who never gave the number can't be logged against the loan.
+    loan_came_up = any(loan_no in e.get("text", "") for e in trace if e["event"] == "caller") or any(
+        r["args_json"].find(loan_no) >= 0 for r in conn.execute("SELECT args_json FROM tool_calls"))
+    if exp.get("comment", True) is True and loan_came_up:
         n = conn.execute("SELECT COUNT(*) FROM comments WHERE author = 'agent' AND loan_number = ?",
                          (loan_no,)).fetchone()[0]
         check("call_note", "outcome", n > 0, "no agent call note on the loan")

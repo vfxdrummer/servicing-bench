@@ -1,9 +1,11 @@
 """Re-grade an existing run with the CURRENT grader and scenario expectations, without re-running calls.
 
     uv run python -m bench.regrade runs/bench-20261005-122510
+    uv run python -m bench.regrade runs/bench-20261005-122510 --reuse-judgments   # free: no API calls
 
 When the grader gets stricter, old runs must be re-graded before comparing them to new ones;
-otherwise a difference could just be a change in grading. Only the judge calls cost money.
+otherwise a difference could just be a change in grading. Only the judge calls cost money;
+--reuse-judgments replays the stored verdicts instead (valid only if the judge rules haven't changed).
 Writes results.regraded.jsonl and report.regraded.md next to the originals.
 """
 
@@ -24,7 +26,19 @@ ROOT = Path(__file__).parent.parent
 SEED_DB = ROOT / "data" / "seed.db"
 
 
-async def main(run_dir: Path, concurrency: int = 6) -> None:
+class StoredJudge:
+    """Replays the verdicts saved in results.jsonl instead of calling the model."""
+
+    def __init__(self, judgments: dict):
+        self.judgments, self.metrics = judgments, {}
+
+    async def check(self, rule: str, transcript: str) -> dict:
+        if rule not in self.judgments:
+            raise KeyError(f"No stored verdict for rule '{rule}'; re-grade without --reuse-judgments.")
+        return self.judgments[rule]
+
+
+async def main(run_dir: Path, reuse: bool = False, concurrency: int = 6) -> None:
     rows = [json.loads(l) for l in (run_dir / "results.jsonl").read_text().splitlines() if l.strip()]
     scenarios = {s.id: s for s in load_all(SEED_DB)}
     sem = asyncio.Semaphore(concurrency)
@@ -36,9 +50,9 @@ async def main(run_dir: Path, concurrency: int = 6) -> None:
             return r
         ep = ROOT / r["dir"]
         async with sem:
-            judge = Judge()
+            judge = StoredJudge(r.get("judgments", {})) if reuse else Judge()
             graded = await grade(scenarios[r["scenario"]], ep / "episode.db", ep / "trace.jsonl", judge)
-        judge_cost += cost(JUDGE_MODEL, judge.metrics)
+        judge_cost += cost(JUDGE_MODEL, judge.metrics) if not reuse else 0.0
         before = r["passed"]
         r.update(graded)
         if before != r["passed"]:
@@ -58,4 +72,4 @@ async def main(run_dir: Path, concurrency: int = 6) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main(Path(sys.argv[1]).resolve()))
+    asyncio.run(main(Path(sys.argv[1]).resolve(), reuse="--reuse-judgments" in sys.argv))

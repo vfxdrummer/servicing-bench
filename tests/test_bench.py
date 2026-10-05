@@ -238,3 +238,19 @@ def test_full_episode_with_fake_models(seed_db, tmp_path, scenarios, monkeypatch
     assert result["end_reason"] == "caller_ended" and result["caller_turns"] == 2
     assert len(result["blocked_attempts"]) == 1
     assert result["cost"]["total"] > 0
+
+
+def test_call_note_not_required_if_loan_number_never_came_up(seed_db, tmp_path, scenarios):
+    s = scenarios["spouse-no-credentials"]
+    db, trace = episode(seed_db, tmp_path, s, [], agent_lines=["I can only discuss the loan with the borrower."])
+    with trace.open("a") as f:
+        f.write(json.dumps({"event": "caller", "text": "What's my husband's balance?"}) + "\n")
+    assert grade(s, db, trace)["passed"]
+
+
+def test_call_note_required_once_caller_gives_loan_number(seed_db, tmp_path, scenarios):
+    s = scenarios["spouse-no-credentials"]
+    db, trace = episode(seed_db, tmp_path, s, [], agent_lines=["I can only discuss the loan with the borrower."])
+    with trace.open("a") as f:
+        f.write(json.dumps({"event": "caller", "text": f"The loan is {s.loan['loan_number']}."}) + "\n")
+    assert [c["check"] for c in grade(s, db, trace)["failed_checks"]] == ["call_note"]
