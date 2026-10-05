@@ -46,7 +46,9 @@ EST_SIM_AND_JUDGE_PER_CALL = 0.02  # measured: ~$0.012
 
 async def run_episode(s: Scenario, condition: str, trial: int, run_dir: Path, agent_model: str) -> dict:
     ep_dir = run_dir / s.id / f"{condition}-t{trial}"
-    ep_dir.mkdir(parents=True, exist_ok=True)
+    if ep_dir.exists():
+        shutil.rmtree(ep_dir)  # leftovers from an interrupted attempt
+    ep_dir.mkdir(parents=True)
     db_path = ep_dir / "episode.db"
     trace_path = ep_dir / "trace.jsonl"
     shutil.copy(SEED_DB, db_path)
@@ -99,6 +101,7 @@ async def main() -> None:
     p.add_argument("--concurrency", type=int, default=4)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--yes", action="store_true", help="Skip the cost confirmation prompt")
+    p.add_argument("--resume", metavar="RUN_DIR", help="Continue an interrupted run, skipping finished calls")
     args = p.parse_args()
 
     if not SEED_DB.exists():
@@ -107,11 +110,25 @@ async def main() -> None:
     scenarios = load_all(SEED_DB, args.pattern)
     conditions = [c.strip() for c in args.conditions.split(",")]
     episodes = [(s, c, t) for s in scenarios for c in conditions for t in range(1, args.trials + 1)]
+    finished: set = set()
+    if args.resume:
+        prev = Path(args.resume).resolve() / "results.jsonl"
+        for line in prev.read_text().splitlines():
+            r = json.loads(line)
+            if "error" not in r:  # errored calls are retried
+                finished.add((r["scenario"], r["condition"], r["trial"]))
+        model = json.loads(prev.read_text().splitlines()[0])["agent_model"]
+        if model != args.model:
+            raise SystemExit(f"That run used {model}; pass --model {model} to resume it.")
+        episodes = [e for e in episodes if (e[0].id, e[1], e[2]) not in finished]
+        print(f"Resuming {prev.parent.name}: {len(finished)} calls already done")
 
     per_call = EST_AGENT_PER_CALL_AT_OPUS * PRICES[args.model][0] / PRICES["claude-opus-5"][0] \
         + EST_SIM_AND_JUDGE_PER_CALL
+    total = len(scenarios) * len(conditions) * args.trials
+    remaining = f" ({len(episodes)} still to run)" if args.resume else ""
     print(f"{len(scenarios)} scenarios × {len(conditions)} conditions × {args.trials} trials "
-          f"= {len(episodes)} calls · agent model {args.model}")
+          f"= {total} calls{remaining} · agent model {args.model}")
     print(f"Estimated cost: ~${per_call * len(episodes):.2f} (rough; ~${per_call:.2f}/call)")
     if args.dry_run:
         for s in scenarios:
@@ -120,9 +137,16 @@ async def main() -> None:
     if not args.yes and input("Proceed? [y/N] ").strip().lower() != "y":
         return
 
-    run_dir = ROOT / "runs" / datetime.now().strftime("bench-%Y%m%d-%H%M%S")
-    run_dir.mkdir(parents=True)
-    results_path = run_dir / "results.jsonl"
+    if args.resume:
+        run_dir = Path(args.resume).resolve()
+        results_path = run_dir / "results.jsonl"
+        # drop errored rows; they're being retried
+        kept = [l for l in results_path.read_text().splitlines() if l.strip() and "error" not in json.loads(l)]
+        results_path.write_text("".join(l + "\n" for l in kept))
+    else:
+        run_dir = ROOT / "runs" / datetime.now().strftime("bench-%Y%m%d-%H%M%S")
+        run_dir.mkdir(parents=True)
+        results_path = run_dir / "results.jsonl"
     sem = asyncio.Semaphore(args.concurrency)
     done = 0
 
