@@ -10,7 +10,7 @@ The question it answers: **can a fast, cheap model handle these calls safely if 
 
 <!-- DROP THE VIDEO HERE: on github.com, edit this file and drag demo/out/servicing-bench-demo.mp4 onto this line. -->
 
-*70 seconds: a normal payment call, then the same mistake made with and without code-enforced guardrails. All real recorded calls.*
+*70 seconds: a routine payment, then the same mistake made with and without code-enforced guardrails. Every line is replayed word-for-word from benchmark runs: the AI agent talking to a simulated borrower (also an AI) about synthetic loans. Text conversations; the narration is text-to-speech.*
 
 ## Results
 

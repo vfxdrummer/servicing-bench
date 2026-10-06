@@ -1,11 +1,12 @@
 # 60-second demo script
 
 **A generated version already exists:** `uv run --with pillow --with imageio-ffmpeg python demo/make_video.py`
-renders a ~70 s narrated, captioned MP4 from the same real recorded calls (macOS text-to-speech voice) to
+renders a ~70 s narrated, captioned MP4 from the same recorded benchmark conversations (text-to-speech narration) to
 `demo/out/servicing-bench-demo.mp4`. The script below is for recording your own version in your own voice.
 
-Screen recording with voiceover. Everything shown is a **real recorded call**, replayed. Nothing is staged,
-and nothing depends on a live model behaving on cue.
+Screen recording with voiceover. Everything shown is replayed **word-for-word from benchmark runs**: the agent
+talking to a simulated borrower (an LLM) about synthetic loans. Nothing is staged, and nothing depends on a live
+model behaving on cue. Say that plainly in the narration; don't imply real customers or phone calls.
 
 ## Setup (before recording)
 

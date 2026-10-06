@@ -1,4 +1,5 @@
-"""Generate the ~60-90 s demo video from REAL recorded benchmark calls: rendered frames + macOS
+"""Generate the ~60-90 s demo video from recorded benchmark conversations (agent vs. simulated borrower,
+synthetic data): rendered frames + macOS
 text-to-speech narration + captions. No screen recording needed.
 
     uv run --with pillow --with imageio-ffmpeg python demo/make_video.py
@@ -55,7 +56,7 @@ SEGMENTS = [
         "The question: can a cheap, fast model do this job, if the rules are enforced in code?",
     ]),
     ("payment", [
-        "Here's a real recorded call. A simulated borrower calls in to make a payment.",
+        "Here's a conversation from the benchmark. A simulated borrower, played by another AI, calls to make a payment.",
         "The agent verifies them, reads the payment back, and only takes it after a clear yes.",
     ]),
     ("compare", [
@@ -253,7 +254,7 @@ def render(timeline, total, out_path):
             centered(d, 300, "servicing-bench", F_TITLE, TEXT)
             centered(d, 440, "Can a fast, cheap AI model handle mortgage calls safely", F_SUB, DIM)
             centered(d, 500, "if the compliance rules are enforced in code?", F_SUB, DIM)
-            centered(d, 640, "Real recorded calls  ·  Claude Haiku 4.5 and Claude Opus 5  ·  synthetic data", F_SMALL, DIM)
+            centered(d, 640, "Replayed benchmark conversations  ·  AI agent vs. simulated borrower  ·  synthetic data", F_SMALL, DIM)
         elif seg["name"] == "payment":
             n = reveal(t, seg["start"] + 0.3, sents[-1][1] - 0.5, len(pay))
             panel(d, (60, 50, W - 60, H - 190), "pay-current-full  ·  guardrails on  ·  claude-haiku-4-5", TEXT, pay, n)

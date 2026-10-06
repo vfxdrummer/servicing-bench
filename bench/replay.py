@@ -1,5 +1,5 @@
 """Replay a recorded benchmark call in the terminal, with guardrail moments highlighted. Made for demos:
-real calls, deterministic, no API cost.
+recorded benchmark conversations, replayed verbatim; deterministic, no API cost.
 
     uv run python -m bench.replay runs/<run>/<scenario>/<condition>-t<n>            # at reading speed
     uv run python -m bench.replay runs/<run>/<scenario>/<condition>-t<n> --fast     # instantly
