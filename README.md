@@ -14,7 +14,7 @@ The question it answers: **can a fast, cheap model handle these calls safely if 
 
 https://github.com/user-attachments/assets/b1bb403c-4a52-40c7-981c-f5fb48cf44ee
 
-*70 seconds: a routine payment, then the same mistake made with and without code-enforced guardrails. Every line is replayed word-for-word from benchmark runs: the AI agent talking to a simulated borrower (also an AI) about synthetic loans. Text conversations; the narration is text-to-speech.*
+*80 seconds: a routine payment, then the same mistake made with and without code-enforced guardrails. Every line is replayed word-for-word from benchmark runs: the AI agent talking to a simulated borrower (also an AI) about synthetic loans. Text conversations; the narration is text-to-speech.*
 
 ## Results
 
