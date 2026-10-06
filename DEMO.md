@@ -1,5 +1,9 @@
 # 60-second demo script
 
+**A generated version already exists:** `uv run --with pillow --with imageio-ffmpeg python demo/make_video.py`
+renders a ~70 s narrated, captioned MP4 from the same real recorded calls (macOS text-to-speech voice) to
+`demo/out/servicing-bench-demo.mp4`. The script below is for recording your own version in your own voice.
+
 Screen recording with voiceover. Everything shown is a **real recorded call**, replayed. Nothing is staged,
 and nothing depends on a live model behaving on cue.
 
