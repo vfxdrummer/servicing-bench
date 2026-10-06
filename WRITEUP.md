@@ -49,8 +49,8 @@ So I moved enforcement to where the failures actually were:
 
 | | Pass rate | pass^4 | Calls with a violation | Agent cost / call | Median latency |
 |---|---|---|---|---|---|
-| Haiku 4.5, policy in prompt only | 83% | 56% | 16% | $0.025 | 1.3 s |
-| Haiku 4.5 + code-enforced guardrails | 92% | 81% | 8% | $0.026 | 1.3 s |
+| Haiku 4.5, policy in prompt only | 83% | 56% | 16% | $0.026 | 1.3 s |
+| Haiku 4.5 + code-enforced guardrails | 92% | 81% | 8% | $0.027 | 1.3 s |
 | Opus 5 (either condition) | 100% | 100% | 0% | $0.065 | 2.6 s |
 
 Guardrails halved Haiku's violations and lifted pass^4 by 25 points. That's about half the gap to Opus, at a fraction of the cost. Opus never triggered a single guardrail: on a strong model they cost nothing. They're insurance.

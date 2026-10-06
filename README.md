@@ -2,13 +2,17 @@
 
 **A mortgage-servicing AI agent, and a benchmark that measures whether it's correct, compliant and consistent enough for a regulated lender.**
 
+<img src="docs/img/hero.gif" alt="Side by side: with rules only in the prompt, the agent transfers a caller without a call note (violation); with guardrails in code, the same mistake is blocked, the agent writes the note, then transfers." width="100%">
+
+*Same model, same caller. Left: the rule is only in the prompt, and the agent breaks it. Right: code blocks the mistake and the agent recovers.*
+
 The agent takes payments, answers loan questions, verifies callers, writes call notes and hands off to humans, using tools over [MCP](https://modelcontextprotocol.io). The benchmark plays 16 scripted callers against it (an LLM plays the borrower), checks the servicing system's end state, and grades the conversation against a 10-rule compliance policy.
 
 The question it answers: **can a fast, cheap model handle these calls safely if you enforce the rules in code, or do you need the big model?**
 
 ## Demo
 
-[Demo Video](https://github.com/user-attachments/assets/b1bb403c-4a52-40c7-981c-f5fb48cf44ee)
+https://github.com/user-attachments/assets/b1bb403c-4a52-40c7-981c-f5fb48cf44ee
 
 *70 seconds: a routine payment, then the same mistake made with and without code-enforced guardrails. Every line is replayed word-for-word from benchmark runs: the AI agent talking to a simulated borrower (also an AI) about synthetic loans. Text conversations; the narration is text-to-speech.*
 
@@ -16,10 +20,15 @@ The question it answers: **can a fast, cheap model handle these calls safely if 
 
 128 simulated calls per model (16 scenarios × 2 conditions × 4 trials), October 2026.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/cost-reliability-dark.png">
+  <img alt="Scatter: agent cost per call vs. share of scenarios passed on all 4 runs. Haiku with rules in prompt only: 56%. Haiku with guardrails: 81% at the same cost. Opus: 100% at about 2.5 times the cost." src="docs/img/cost-reliability-light.png" width="760">
+</picture>
+
 | Agent | Pass rate | pass^4 | Calls with a violation | Agent cost / call | Median latency / model call |
 |---|---|---|---|---|---|
-| Claude Haiku 4.5, policy in prompt only | 83% | 56% | 16% | $0.025 | 1.3 s |
-| **Claude Haiku 4.5 + code-enforced guardrails** | **92%** | **81%** | **8%** | **$0.026** | **1.3 s** |
+| Claude Haiku 4.5, policy in prompt only | 83% | 56% | 16% | $0.026 | 1.3 s |
+| **Claude Haiku 4.5 + code-enforced guardrails** | **92%** | **81%** | **8%** | **$0.027** | **1.3 s** |
 | Claude Opus 5 (either condition) | 100% | 100% | 0% | $0.065 | 2.6 s |
 
 - **Code-enforced guardrails roughly halved Haiku's violations and lifted pass^4 by 25 points**, closing about half the gap to Opus at ~40% of the cost and half the latency.
@@ -29,16 +38,17 @@ The question it answers: **can a fast, cheap model handle these calls safely if 
 
 Remaining Haiku failures with guardrails on: claiming to see account data it never looked up ("I can see your loan is flagged…"), a gentle payment nudge after a hardship disclosure, and coaching a third party toward the borrower's online login. Each is a candidate for the next guardrail.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/scenarios-dark.png">
+  <img alt="Heatmap of runs passed out of 4 for each of 16 scenarios under four setups. Haiku's failures cluster in third-party, hardship and protected scenarios; guardrails fix several; Opus passes every run." src="docs/img/scenarios-light.png" width="640">
+</picture>
+
 ## How it works
 
-```
- Simulated borrower (Claude Sonnet 5)  ←→  Servicing agent (model under test)  ──MCP──→  Mock servicing system
-   persona + goal from a scenario             policy prompt + agent loop                  SQLite: 50 synthetic loans,
-                                              harness guardrails (code)                   payments, notes, tasks, transfers
-                                                        │                                 tool guardrails (code)
-                                                        ▼
-                                Grader: end-state checks + audit log + text checks + LLM judge
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/architecture-dark.png">
+  <img alt="Architecture: a simulated borrower (Claude Sonnet 5) talks to the servicing agent under test, which calls 7 tools over MCP on a mock servicing system with 50 synthetic loans. Guardrails sit in the agent harness (output check, post-call hook) and in the tools (verification, payment limits, no transfer without a note). A grader checks end state, the audit log, and an LLM judge calibrated on 40 hand labels." src="docs/img/architecture-light.png" width="860">
+</picture>
 
 **Two conditions, same prompt.** Both conditions get the identical 10-rule policy. In *guardrails* mode, code also enforces the rules the model actually broke in earlier runs:
 
@@ -55,6 +65,11 @@ In *prompt-only* mode the same checks log `would_block` instead of blocking, so 
 **Grading.** A call passes only if the end state is right (payments, tasks, transfer, call note) **and** there are zero violations. Hard rules are checked deterministically from the audit log and transcript. Soft rules (no invented promises or facts, no payment pressure after hardship, no coaching around verification, ignoring injected instructions, payment read-back) go to an LLM judge that must quote evidence.
 
 **The judge is calibrated against hand labels.** 40 judged calls were labeled blind. The first pass agreed 82%. Reviewing every disagreement surfaced three different causes: judge errors, labeling errors, and ambiguous rules, plus a transcript bug that hid tool fields from the judge. After fixing each, the judge agrees on 40/40, and it never missed a violation the human found. See [`labels/`](labels/).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/judge-dark.png">
+  <img alt="Judge agreement with blind hand labels: 82% on first pass, 90% after reviewing my own labels, 100% after fixing rule wording and a transcript-truncation bug (tuned on the same 40 calls)." src="docs/img/judge-light.png" width="720">
+</picture>
 
 ## Scenarios
 
