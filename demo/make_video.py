@@ -2,6 +2,7 @@
 text-to-speech narration + captions. No screen recording needed.
 
     uv run --with pillow --with imageio-ffmpeg python demo/make_video.py
+    uv run --with pillow --with imageio-ffmpeg python demo/make_video.py --voice "Ava (Premium)" --rate 175
 
 Output: demo/out/servicing-bench-demo.mp4  (macOS only: uses `say` and `afconvert` for the voiceover)
 """
@@ -247,6 +248,18 @@ def render(timeline, total, out_path):
 
 
 def main() -> None:
+    global VOICE, RATE
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--voice", default=VOICE, help='A macOS voice, e.g. "Ava (Premium)". List: say -v "?"')
+    p.add_argument("--rate", type=int, default=RATE, help="Words per minute")
+    args = p.parse_args()
+    installed = subprocess.run(["say", "-v", "?"], capture_output=True, text=True).stdout
+    if args.voice not in installed:
+        raise SystemExit(f'Voice "{args.voice}" is not installed. Download it in System Settings → Accessibility → '
+                         f'Spoken Content → System Voice → Manage Voices, or pick one from: say -v "?"')
+    VOICE, RATE = args.voice, args.rate
+    print(f"Voice: {VOICE} at {RATE} wpm")
     OUT.mkdir(exist_ok=True)
     timeline, total = build_audio()
     silent = OUT / "video_silent.mp4"
