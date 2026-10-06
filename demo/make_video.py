@@ -4,6 +4,10 @@ text-to-speech narration + captions. No screen recording needed.
     uv run --with pillow --with imageio-ffmpeg python demo/make_video.py
     uv run --with pillow --with imageio-ffmpeg python demo/make_video.py --voice "Ava (Premium)" --rate 175
 
+    # ElevenLabs voices (needs ELEVENLABS_API_KEY in your environment; never commit it)
+    uv run --with pillow --with imageio-ffmpeg python demo/make_video.py --list-elevenlabs-voices
+    uv run --with pillow --with imageio-ffmpeg python demo/make_video.py --elevenlabs <voice_id>
+
 Output: demo/out/servicing-bench-demo.mp4  (macOS only: uses `say` and `afconvert` for the voiceover)
 """
 
@@ -72,13 +76,57 @@ SEGMENTS = [
 GAP, LEAD, TAIL = 0.35, 0.4, 0.8  # seconds
 
 
+ELEVEN_VOICE: str | None = None   # set by --elevenlabs
+ELEVEN_MODEL = "eleven_multilingual_v2"
+CACHE = Path(__file__).parent / "out" / "tts_cache"
+
+
+def _wav_duration(path: Path) -> float:
+    with wave.open(str(path)) as w:
+        return w.getnframes() / w.getframerate()
+
+
+def _eleven_request(url: str, body: dict | None = None) -> bytes:
+    import os
+    import urllib.request
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key:
+        raise SystemExit("Set ELEVENLABS_API_KEY in your shell first (it stays on your machine).")
+    req = urllib.request.Request(url, data=json.dumps(body).encode() if body else None,
+                                 headers={"xi-api-key": key, "Content-Type": "application/json"},
+                                 method="POST" if body else "GET")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            return r.read()
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"ElevenLabs error {e.code}: {e.read().decode()[:300]}")
+
+
+def list_eleven_voices() -> None:
+    data = json.loads(_eleven_request("https://api.elevenlabs.io/v1/voices"))
+    for v in data.get("voices", []):
+        labels = ", ".join(f"{k}: {val}" for k, val in (v.get("labels") or {}).items())
+        print(f"{v['voice_id']}  {v['name']:<22} {labels}")
+
+
 def synth(text: str, path: Path) -> float:
+    """Narrate one sentence into a 22.05 kHz mono WAV and return its duration in seconds."""
+    if ELEVEN_VOICE:
+        import hashlib
+        CACHE.mkdir(parents=True, exist_ok=True)
+        cached = CACHE / (hashlib.sha1(f"{ELEVEN_VOICE}|{ELEVEN_MODEL}|{text}".encode()).hexdigest() + ".mp3")
+        if not cached.exists():  # cache so re-renders don't spend credits again
+            cached.write_bytes(_eleven_request(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}?output_format=mp3_44100_128",
+                {"text": text, "model_id": ELEVEN_MODEL}))
+        subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error", "-i", str(cached),
+                        "-ac", "1", "-ar", "22050", "-sample_fmt", "s16", str(path)], check=True)
+        return _wav_duration(path)
     aiff = path.with_suffix(".aiff")
     subprocess.run(["say", "-v", VOICE, "-r", str(RATE), "-o", str(aiff), text], check=True)
     subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@22050", "-c", "1", str(aiff), str(path)], check=True)
     aiff.unlink()
-    with wave.open(str(path)) as w:
-        return w.getnframes() / w.getframerate()
+    return _wav_duration(path)
 
 
 def build_audio() -> tuple[list[dict], float]:
@@ -248,18 +296,27 @@ def render(timeline, total, out_path):
 
 
 def main() -> None:
-    global VOICE, RATE
+    global VOICE, RATE, ELEVEN_VOICE
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("--voice", default=VOICE, help='A macOS voice, e.g. "Ava (Premium)". List: say -v "?"')
-    p.add_argument("--rate", type=int, default=RATE, help="Words per minute")
+    p.add_argument("--rate", type=int, default=RATE, help="Words per minute (macOS voices)")
+    p.add_argument("--elevenlabs", metavar="VOICE_ID", help="Use an ElevenLabs voice instead of macOS")
+    p.add_argument("--list-elevenlabs-voices", action="store_true")
     args = p.parse_args()
-    installed = subprocess.run(["say", "-v", "?"], capture_output=True, text=True).stdout
-    if args.voice not in installed:
-        raise SystemExit(f'Voice "{args.voice}" is not installed. Download it in System Settings → Accessibility → '
-                         f'Spoken Content → System Voice → Manage Voices, or pick one from: say -v "?"')
-    VOICE, RATE = args.voice, args.rate
-    print(f"Voice: {VOICE} at {RATE} wpm")
+    if args.list_elevenlabs_voices:
+        list_eleven_voices()
+        return
+    if args.elevenlabs:
+        ELEVEN_VOICE = args.elevenlabs
+        print(f"Voice: ElevenLabs {ELEVEN_VOICE} ({ELEVEN_MODEL})")
+    else:
+        installed = subprocess.run(["say", "-v", "?"], capture_output=True, text=True).stdout
+        if args.voice not in installed:
+            raise SystemExit(f'Voice "{args.voice}" is not installed. Download it in System Settings → Accessibility → '
+                             f'Spoken Content → System Voice → Manage Voices, or pick one from: say -v "?"')
+        VOICE, RATE = args.voice, args.rate
+        print(f"Voice: {VOICE} at {RATE} wpm")
     OUT.mkdir(exist_ok=True)
     timeline, total = build_audio()
     silent = OUT / "video_silent.mp4"
