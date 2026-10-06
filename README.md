@@ -6,6 +6,12 @@ The agent takes payments, answers loan questions, verifies callers, writes call 
 
 The question it answers: **can a fast, cheap model handle these calls safely if you enforce the rules in code, or do you need the big model?**
 
+## Demo
+
+<!-- DROP THE VIDEO HERE: on github.com, edit this file and drag demo/out/servicing-bench-demo.mp4 onto this line. -->
+
+*70 seconds: a normal payment call, then the same mistake made with and without code-enforced guardrails. All real recorded calls.*
+
 ## Results
 
 128 simulated calls per model (16 scenarios × 2 conditions × 4 trials), October 2026.
